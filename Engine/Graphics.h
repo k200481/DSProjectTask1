@@ -118,7 +118,7 @@ public:
 		dir = dir * (1.0f / len);
 		for (size_t i = 0; i < size_t(len); i++)
 		{
-			PutPixel(pt.x, pt.y, c);
+			PutPixel((int)pt.x, (int)pt.y, c);
 			pt += dir;
 		}
 	}

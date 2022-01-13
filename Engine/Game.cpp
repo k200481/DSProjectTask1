@@ -28,22 +28,18 @@ Game::Game( MainWindow& wnd )
 	:
 	wnd( wnd ),
 	gfx( wnd ),
-	nodes(16),
-	font("Images/Fixedsys16x28.bmp")
+	nodes(16)
 {
-	// half the dimensions of a character
-	// needed for centering the characters as the framework draws the from top-left
-	const Vec2 correctionFactor = Vec2(8.0f, 14.0f);
 	// place node 1 at the center of the screen
 	const Vec2 center = Vec2(gfx.ScreenWidth / 2, gfx.ScreenHeight / 2);
-	nodes[0] = Node(1, center - correctionFactor);
+	nodes[0] = Node(1, center);
 	// generate all the other nodes in a circle around node 1
 	for (size_t i = 1; i < 16; i++)
 	{
 		// the angle of the node from the center of the screen
 		const float angle = 2 * 3.14f * i / 15.0f;
 		// the position of the node on the screen
-		const Vec2 pos = center + Vec2{ sin(angle), -cos(angle) } * 200.0f - correctionFactor;
+		const Vec2 pos = center + Vec2{ sin(angle), -cos(angle) } * 200.0f;
 		// create a new node
 		nodes[i] = Node(i + 1, pos);
 	}
@@ -67,8 +63,6 @@ void Game::ComposeFrame()
 	// draw the nodes at their positions
 	for (auto& node : nodes)
 	{
-		std::ostringstream oss;
-		oss << node.GetAddress();
-		font.DrawText(oss.str(), Vei2(node.GetPos()), Colors::Cyan, gfx);
+		node.Draw(gfx);
 	}
 }

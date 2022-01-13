@@ -23,7 +23,6 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 #include "Graphics.h"
-#include "Surface.h"
 
 #include "Node.h"
 #include "DSA.h"
@@ -48,6 +47,5 @@ private:
 	/********************************/
 	/*  User Variables              */
 	DSA<Node> nodes;
-	Font font;
 	/********************************/
 };
