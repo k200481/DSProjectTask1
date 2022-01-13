@@ -162,20 +162,22 @@ void Game::ComposeFrame()
 	// draw the nodes at their positions
 	for (auto& node : nodes)
 	{
-		node.Draw(gfx, Colors::Cyan);
+		node.Draw(gfx, Colors::Gray);
 	}
 
 	// draw the current highlighted path
 	for (int i = 0; i < (int)path.size() - 1; i++)
 	{
 		// draw lines between the current vtx and the next
-		gfx.DrawLine(path[i].GetPos(), path[i + 1].GetPos(), Colors::Red);
+		gfx.DrawLine(path[i].GetPos(), path[i + 1].GetPos(), Colors::Cyan);
 	}
 
 	// redraw vertices that appear in the path red
-	for (auto& v : path)
+	path.front().Draw(gfx, Colors::Green);
+	path.back().Draw(gfx, Colors::Red);
+	for (int i = 1; i < path.size() - 1; i++)
 	{
-		v.Draw(gfx, Colors::Red);
+		path[i].Draw(gfx, Colors::Yellow);
 	}
 
 	// draw message test
