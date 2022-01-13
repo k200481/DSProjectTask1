@@ -41,6 +41,8 @@ private:
 	void UpdateModel();
 	/********************************/
 	/*  User Functions              */
+
+	// function to process key presses
 	void ProcessKey(unsigned char key);
 	/********************************/
 private:
@@ -48,21 +50,31 @@ private:
 	Graphics gfx;
 	/********************************/
 	/*  User Variables              */
+	
+	// the graph generated from the file
 	Graph<Node> g;
+	// the source of the highlighted path
 	size_t src = 1;
+	// the destination of the highlighted path
 	size_t dst = 1;
+	// the path to highlight
 	DSA<Node> path = DSA<Node>(1, Node(1, Vec2(Graphics::ScreenWidth / 2, Graphics::ScreenHeight / 2)));
+	// true when BFS is used, false when DFS is used
 	bool useBFS = true;
+	// the message to draw on the bottom left of the screen
 	std::string msg = "BFS from 1 to 1";
+	// font used to draw text
 	Font font = Font("Images/Fixedsys16x28.bmp");
-
-	rapidcsv::Document doc;
-
+	// used to read csv file
+	rapidcsv::Document doc = rapidcsv::Document("Final Data Structure.csv", rapidcsv::LabelParams());
+	
+	// number of vertices in the graph
 	static constexpr size_t NumVertices = 16;
-
+	// the index of the column in the file with the sources
 	static constexpr size_t SrcColIdx = 3;
-	static constexpr size_t DstColIdx = 5;
+	// the index of the column in the file with the number of neighbours
 	static constexpr size_t NeighbourCountColIdx = 12;
+	// the index of the column in the file with the first neighbour
 	static constexpr size_t firstNeighbourColIdx = 14;
 	/********************************/
 };

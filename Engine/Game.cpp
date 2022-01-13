@@ -25,8 +25,7 @@
 Game::Game( MainWindow& wnd )
 	:
 	wnd( wnd ),
-	gfx( wnd ),
-	doc("Final Data Structure.csv", rapidcsv::LabelParams(0, -1))
+	gfx( wnd )
 {
 	// place node 1 at the center of the screen
 	const Vec2 center = Vec2(gfx.ScreenWidth / 2, gfx.ScreenHeight / 2);
@@ -42,28 +41,37 @@ Game::Game( MainWindow& wnd )
 		g.AddVertex(Node(i + 1, pos));
 	}
 
-	// 
+	// read edges from file
 	for (size_t i = 0, k = 0; i < doc.GetRowCount() && k < NumVertices; i++)
 	{
+		// the source vertex
 		const size_t src = doc.GetCell<size_t>(SrcColIdx, i);
+		// the number of edges from this source
 		const size_t numNeighbours = doc.GetCell<size_t>(NeighbourCountColIdx, i);
 		
+		// check if this vertex already has edges
+		// this is needed as there are duplicates in the file
 		if (g.GetAdjList_idx(src - 1).empty())
 		{
 			k++;
+			// read a destination vertex and add an edge to it from source
 			for (size_t j = 0; j < numNeighbours; j++)
 			{
+				// the destination vertex
 				const size_t neighbour_j = doc.GetCell<size_t>(firstNeighbourColIdx + 3 * j, i);
 				g.AddEdge_idx(src - 1, neighbour_j - 1);
 			}
 		}
 	}
 
+	// enabling auto repeat allows us to press and hold a key
+	// and have it read as multiple presses
 	wnd.kbd.EnableAutorepeat();
 }
 
 void Game::Go()
 {
+	// framework stuff
 	gfx.BeginFrame();	
 	UpdateModel();
 	ComposeFrame();
@@ -72,21 +80,29 @@ void Game::Go()
 
 void Game::UpdateModel()
 {
+	// check if any keyboard event occured
 	while (!wnd.kbd.KeyIsEmpty())
 	{
+		// read the first keyboard event
 		auto e = wnd.kbd.ReadKey();
+		// if the event was a press
 		if (e.IsPress())
 		{
+			// get the ASCII code of the key that was pressed
+			// and act accordingly
 			ProcessKey(e.GetCode());
 
+			// make sure the src and dst vertices dont go below 1 or above 16
 			src = std::max(size_t(1), std::min(size_t(NumVertices), src));
 			dst = std::max(size_t(1), std::min(size_t(NumVertices), dst));
 
+			// use the pathfinding algo currently selected
 			if (useBFS)
 				path = g.BFS(Node(src), Node(dst));
 			else
 				path = g.DFS(Node(src), Node(dst));
 
+			// generate a message based on the current state of the variables
 			std::ostringstream oss;
 			oss << (useBFS ? "BFS" : "DFS")
 				<< " from " << src
@@ -101,18 +117,23 @@ void Game::ProcessKey(unsigned char key)
 	switch (key)
 	{
 	case VK_RIGHT:
+		// clockwise rotation of src
 		src++;
 		break;
 	case VK_LEFT:
+		// counter-clockwise rotation of src
 		src--;
 		break;
 	case VK_UP:
+		// clockwise rotation of dst
 		dst++;
 		break;
 	case VK_DOWN:
+		// counter-clockwise rotation of dst
 		dst--;
 		break;
 	case VK_SPACE:
+		// toggle pathfinding algo
 		useBFS = !useBFS;
 		break;
 	}
@@ -132,7 +153,7 @@ void Game::ComposeFrame()
 		{
 			gfx.DrawLine(
 				nodes[edge.src_idx].GetPos(),  // from src node
-				nodes[edge.dst_idx].GetPos(),  // to dst idx
+				nodes[edge.dst_idx].GetPos(),  // to dst node
 				Colors::Gray
 			);
 		}
@@ -157,5 +178,6 @@ void Game::ComposeFrame()
 		v.Draw(gfx, Colors::Red);
 	}
 
+	// draw message test
 	font.DrawText(msg, Vei2(20, gfx.ScreenHeight - 40), Colors::Gray, gfx);
 }
