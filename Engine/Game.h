@@ -24,7 +24,10 @@
 #include "Mouse.h"
 #include "Graphics.h"
 #include "Surface.h"
-#include "Bencher.h"
+
+#include "Node.h"
+#include "DSA.h"
+#include "Font.h"
 
 class Game
 {
@@ -44,6 +47,7 @@ private:
 	Graphics gfx;
 	/********************************/
 	/*  User Variables              */
-	
+	DSA<Node> nodes;
+	Font font;
 	/********************************/
 };
