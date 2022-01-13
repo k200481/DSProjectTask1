@@ -110,6 +110,19 @@ public:
 		}
 	}
 
+	void DrawLine(const Vec2& pt1, const Vec2& pt2, Color c = Colors::White)
+	{
+		Vec2 pt = pt1;
+		Vec2 dir = pt2 - pt1;
+		const float len = dir.GetLength();
+		dir = dir * (1.0f / len);
+		for (size_t i = 0; i < size_t(len); i++)
+		{
+			PutPixel(pt.x, pt.y, c);
+			pt += dir;
+		}
+	}
+
 	~Graphics();
 private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain>				pSwapChain;
