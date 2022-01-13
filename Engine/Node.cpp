@@ -25,9 +25,14 @@ void Node::SetPos(const Vec2& pos_in)
 	pos = pos_in;
 }
 
-void Node::Draw(Graphics& gfx) const
+void Node::Draw(Graphics& gfx, Color c) const
 {
 	std::ostringstream oss;
 	oss << value;
-	font.DrawText(oss.str(), Vei2(pos - correctionFactor), Colors::Cyan, gfx);
+	font.DrawText(oss.str(), Vei2(pos - correctionFactor), c, gfx);
+}
+
+bool Node::operator==(const Node& rhs) const
+{
+	return value == rhs.value;
 }

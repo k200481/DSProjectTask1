@@ -15,7 +15,9 @@ public:
 
 	void SetPos(const Vec2& pos_in);
 	// draws a node at it's position on the screen using a gfx ref
-	void Draw(Graphics& gfx) const;
+	void Draw(Graphics& gfx, Color c) const;
+
+	bool operator==(const Node& rhs) const;
 
 private:
 	// the number/address representing a node

@@ -23,10 +23,11 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 #include "Graphics.h"
+#include "FrameTimer.h"
 
 #include "Node.h"
-#include "DSA.h"
-#include "Font.h"
+#include "Graph.h"
+#include "RapidCSV.h"
 
 class Game
 {
@@ -40,12 +41,28 @@ private:
 	void UpdateModel();
 	/********************************/
 	/*  User Functions              */
+	void ProcessKey(unsigned char key);
 	/********************************/
 private:
 	MainWindow& wnd;
 	Graphics gfx;
 	/********************************/
 	/*  User Variables              */
-	DSA<Node> nodes;
+	Graph<Node> g;
+	size_t src = 1;
+	size_t dst = 1;
+	DSA<Node> path = DSA<Node>(1, Node(1, Vec2(Graphics::ScreenWidth / 2, Graphics::ScreenHeight / 2)));
+	bool useBFS = true;
+	std::string msg = "BFS from 1 to 1";
+	Font font = Font("Images/Fixedsys16x28.bmp");
+
+	rapidcsv::Document doc;
+
+	static constexpr size_t NumVertices = 16;
+
+	static constexpr size_t SrcColIdx = 3;
+	static constexpr size_t DstColIdx = 5;
+	static constexpr size_t NeighbourCountColIdx = 12;
+	static constexpr size_t firstNeighbourColIdx = 14;
 	/********************************/
 };
