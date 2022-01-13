@@ -6,66 +6,67 @@
 #include "Queue.h"
 #include "Stack.h"
 
-template <typename T>
+template <typename V>
 class Graph
 {
 public:
+	// a single edge between two vertices
 	struct Edge
 	{
-		size_t src;
-		size_t dst;
-		int weight;
+		const size_t src_idx;
+		const size_t dst_idx;
+		float weight;
 	};
 
 public:
+	//
 	Graph() = default;
 	// adds a new vertex to the graph
-	void AddVertex(const T& val)
+	void AddVertex(const V& val)
 	{
-		if (HasVertex(val))
-		{
-			throw std::exception("Attempted to add duplicate vertices");
-		}
+		assert(!HasVertex(val) && "Attempted to add duplicate vertices");
 		verts.push_back(val);
 		edges.push_back(SinglyLinkedList<Edge>());
 	}
 	// creates an undirected edge b/w given vertices
-	// if vertices do not exist, creates them
-	void AddEdge(const T& src, const T& dst, int weight = 1)
+	void AddEdge(const V& src, const V& dst, float weight = 0.0f)
 	{
-		size_t verts_size = verts.size();
-		size_t src_idx = GetVertIdx(src);
-		size_t dst_idx = GetVertIdx(dst);
+		const size_t src_idx = GetVertIdx(src);
+		const size_t dst_idx = GetVertIdx(dst);
 
-		if (src_idx == verts_size)
-		{
-			AddVertex(src);
-			src_idx = verts.size() - 1;
-		}
-		if (dst_idx == verts_size)
-		{
-			AddVertex(dst);
-			dst_idx = verts.size() - 1;
-		}
-
-		edges[src_idx].push_back({ src_idx, dst_idx, weight });
-		//edges[dst_idx].push_back({ dst_idx, src_idx, weight });
+		AddEdge_idx(src_idx, dst_idx, weight);
 	}
+	// creates an undirected edge b/w vertices at given indices
+	void AddEdge_idx(size_t src_idx, size_t dst_idx, float weight = 0.0f)
+	{
+		assert(src_idx < verts.size() && "Vertex does not exist");
+		assert(dst_idx < verts.size() && "Vertex does not exist");
+		edges[src_idx].push_back({ src_idx, dst_idx, weight });
+	}
+	
 	// performs bredth first search on graph starting at the source node
 	// until the dst node is found, returns path from source to dst
 	// returns the shortest path
-	DSA<T> BFS(const T& src, const T& dst) const
+	DSA<V> BFS(const V& src, const V& dst) const
 	{
-		auto src_idx = GetVertIdx(src);
-		if (src_idx == verts.size())
+		const size_t src_idx = GetVertIdx(src);
+		const size_t dst_idx = GetVertIdx(dst);
+		
+		const auto& indices = BFS_idx(src_idx, dst_idx);
+		DSA<V> path(indices.size());
+		for (size_t i = 0; i < indices.size(); i++)
 		{
-			throw std::exception("Vertex does not exist");
+			path[i] = verts[indices[i]];
 		}
-		auto dst_idx = GetVertIdx(dst);
-		if (dst_idx == verts.size())
-		{
-			throw std::exception("Vertex does not exist");
-		}
+		return path;
+	}
+	// performs bredth first search on graph starting at the source idx
+	// until the dst node is found, returns path from source to dst
+	// returns the shortest path in terms of vertex indices
+	DSA<size_t> BFS_idx(size_t src_idx, size_t dst_idx) const
+	{
+		assert(src_idx < verts.size() && "Vertex does not exist");
+		assert(dst_idx < verts.size() && "Vertex does not exist");
 
 		// queue for bfs
 		LinkedListQueue<DSA<size_t>> q;
@@ -80,12 +81,7 @@ public:
 
 			if (path.back() == dst_idx)
 			{
-				DSA<T> ans;
-				for (auto& idx : path)
-				{
-					ans.push_back(verts[idx]);
-				}
-				return ans;
+				return path;
 			}
 
 			// iterate over all vertices adjacent to the last vertex in the path
@@ -93,213 +89,109 @@ public:
 			{
 				// if a vertex doesn't form a cycle add it to the path
 				// and push the new path onto the queue
-				if (!path.Has(e.dst))
+				if (!path.Has(e.dst_idx))
 				{
 					auto temp = path;
-					temp.push_back(e.dst);
+					temp.push_back(e.dst_idx);
 					q.push(temp);
 				}
 			}
 		}
 
-		return DSA<T>();
+		return DSA<size_t>();
 	}
+
 	// performs depth first search on graph starting at the given source node
 	// until the dst node is found, returns path from source to dst
 	// will most likely NOT return the shortest path
-	DSA<T> DFS(const T& src, const T& dst) const
+	DSA<V> DFS(const V& src, const V& dst) const
 	{
-		size_t src_idx = GetVertIdx(src);
-		if (src_idx == verts.size())
-		{
-			throw std::exception("Src vertex does not exist");
-		}
-		size_t dst_idx = GetVertIdx(dst);
-		if (dst_idx == verts.size())
-		{
-			throw std::exception("Dst vertex does not exist");
-		}
+		const size_t src_idx = GetVertIdx(src);
+		const size_t dst_idx = GetVertIdx(dst);
 
-		// stack for DFS
+		const auto& indices = DFS_idx(src_idx, dst_idx);
+		DSA<V> path(indices.size());
+		for (size_t i = 0; i < indices.size(); i++)
+		{
+			path[i] = verts[indices[i]];
+		}
+		return path;
+	}
+	// performs depth first search on graph starting at the given source node
+	// until the dst node is found, returns path from source to dst
+	// will most likely NOT return the shortest path (in terms of vtx indices)
+	DSA<size_t> DFS_idx(size_t src_idx, size_t dst_idx) const
+	{
+		assert(src_idx < verts.size() && "Vertex does not exist");
+		assert(dst_idx < verts.size() && "Vertex does not exist");
+
+		// stack for dfs
 		LinkedListStack<DSA<size_t>> s;
-		// push first path onto stack
+		// push first list onto stack
 		s.push(DSA<size_t>{ 1, src_idx });
 
 		while (!s.empty())
 		{
-			// get the path at the top of the stack
-			auto f = s.top();
+			// get first path in stack
+			auto path = s.top();
 			s.pop();
 
-			if (f.back() == dst_idx)
+			if (path.back() == dst_idx)
 			{
-				DSA<T> path;
-				for (auto& idx : f)
-				{
-					path.push_back(verts[idx]);
-				}
 				return path;
 			}
 
 			// iterate over all vertices adjacent to the last vertex in the path
-			for (auto& e : edges[f.back()])
+			for (auto& e : edges[path.back()])
 			{
 				// if a vertex doesn't form a cycle add it to the path
-				// and push the new path onto the queue
-				if (!f.Has(e.dst))
+				// and push the new path onto the stack
+				if (!path.Has(e.dst_idx))
 				{
-					auto temp = f;
-					temp.push_back(e.dst);
+					auto temp = path;
+					temp.push_back(e.dst_idx);
 					s.push(temp);
 				}
 			}
 		}
 
-		return DSA<T>();
-	}
-	// runs the bellman ford algorithm on the graph to find the 
-	// shortest path to every node from the given source node
-	void Bellmanford(const T& src) const
-	{
-		size_t src_idx = GetVertIdx(src);
-		size_t num_verts = verts.size();
-
-		DSA<int> dist(num_verts, INT_MAX);
-		dist[src_idx] = 0;
-
-		for (size_t i = 0; i < num_verts - 1; i++)
-		{
-			// equivalent to a single for loop through all edges
-			for (auto& lst : edges)
-			{
-				for (auto& e : lst)
-				{
-					if (dist[e.src] != INT_MAX && dist[e.dst] > dist[e.src] + e.weight)
-					{
-						dist[e.dst] = dist[e.src] + e.weight;
-					}
-				}
-			}
-		}
-
-		// check for negative weight cycle
-		for (auto& lst : edges)
-		{
-			for (auto& e : lst)
-			{
-				if (dist[e.src] != INT_MAX && dist[e.dst] > dist[e.src] + e.weight)
-				{
-					throw std::exception("Graph has negative weight cycle\n");
-				}
-			}
-		}
-
-		for (size_t i = 0; i < verts.size(); i++)
-		{
-			std::cout << "dist(" << verts[i] << ") = " << dist[i] << std::endl;
-		}
-	}
-	// performs topological sort to produce a topological ordering of the graph
-	void TopSort() const
-	{
-		DSA<bool> visited(verts.size(), false);
-		LinkedListStack<size_t> ans;
-		
-		size_t idx = 0;
-		while (true)
-		{
-			TopSortHelper(idx, ans, visited);
-			bool completed = true;
-			for (size_t i = 0; i < verts.size(); i++)
-			{
-				if (!visited[i])
-				{
-					idx = i;
-					completed = false;
-				}
-			}
-
-			if (completed)
-				break;
-		}
-
-		while (!ans.empty())
-		{
-			std::cout << verts[ans.top()] << ' ';
-			ans.pop();
-		}
-	}
-	// detects any cycle within the graph
-	bool IsCyclic() const
-	{
-		LinkedListQueue<DSA<size_t>> paths;
-
-		for (size_t i = 0; i < verts.size(); i++)
-		{
-			DSA<size_t> path;
-			path.push_back(i);
-
-			paths.push(path);
-			while (!paths.empty())
-			{
-				auto front = paths.front();
-				paths.pop();
-
-				auto last = front.back();
-				for (auto& e : edges[last])
-				{
-					if (front.Has(e.dst))
-					{
-						return true;
-					}
-
-					auto new_path = front;
-					new_path.push_back(e.dst);
-					paths.push(new_path);
-				}
-			}
-		}
-		return false;
-	}
-	// quite literally just bellman ford in a loop
-	void FloydWarshall()
-	{
-		for (auto& elem : verts)
-		{
-			std::cout << "With " << elem << " as source\n";
-			Bellmanford(elem);
-		}
+		return DSA<size_t>();
 	}
 	
-	// check if a vertex already exists
-	bool HasVertex(const T& val)
-	{
-		return verts.Has(val);
-	}
-	const DSA<T>& GetVertices() const
+	// returns all vertices stored in the graph
+	const DSA<V>& GetVertices() const
 	{
 		return verts;
 	}
-	const SinglyLinkedList<Edge>& GetAdjList(const T& val) const
+	// returns all vertices stored in the graph (non-const version)
+	DSA<V>& GetVertices()
 	{
-		return edges[GetVertIdx(val)];
+		return verts;
+	}
+	// returns adj list of given vertex
+	const SinglyLinkedList<Edge>& GetAdjList(const V& val) const
+	{
+		return GetAdjList_idx(GetVertIdx(val));
+	}
+	// returns adj list of given vertex (non-const version)
+	SinglyLinkedList<Edge>& GetAdjList(const V& val)
+	{
+		return GetAdjList_idx(GetVertIdx(val));
+	}
+	// returns adj list of vertex at given idx
+	const SinglyLinkedList<Edge>& GetAdjList_idx(size_t idx) const
+	{
+		return edges[idx];
+	}
+	// returns adj list of vertex at given idx (non-const version)
+	SinglyLinkedList<Edge>& GetAdjList_idx(size_t idx)
+	{
+		return edges[idx];
 	}
 
-private:
-	// recursive DFS for TopSort
-	void TopSortHelper(size_t idx, LinkedListStack<size_t>& ans, DSA<bool>& visited) const
-	{
-		visited[idx] = true;
-		for (const auto& e : edges[idx])
-		{
-			if (!visited[e.dst])
-				TopSortHelper(e.dst, ans, visited);
-		}
-		ans.push(idx);
-	}
 	// returs the index of a given vertex
 	// if vertex does not exist, returns the size of the vertex array
-	size_t GetVertIdx(const T& val) const
+	size_t GetVertIdx(const V& val) const
 	{
 		for (size_t i = 0; i < verts.size(); i++)
 		{
@@ -308,9 +200,14 @@ private:
 		}
 		return verts.size();
 	}
+	// check if a vertex already exists
+	bool HasVertex(const V& val)
+	{
+		return verts.Has(val);
+	}
 
 private:
-	DSA<T> verts;
+	DSA<V> verts;
 	DSA<SinglyLinkedList<Edge>> edges;
 };
 
